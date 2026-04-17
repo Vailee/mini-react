@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "baseUrl": ".",
+    "paths": {
+      "@shared/*": ["packages/shared/*"],
+      "@scheduler/*": ["packages/scheduler/*"],
+      "@react/*": ["packages/react/*"],
+      "@react-dom/*": ["packages/react-dom/*"],
+      "@react-reconciler/*": ["packages/react-reconciler/*"]
+    },
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true
+  },
+  "include": ["packages/**/*"]
+}
