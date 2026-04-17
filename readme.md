@@ -60,3 +60,7 @@ childIndexLeft = (parentIndex + 1) * 2 - 1
 parentIndex = (childIndex - 1) >> 1 // 右移一位，等价于除以2
 
 ## 实现scheduler 任务 调度器
+callback task work 的区别
+- callback是任务的初始值
+- task 是scheduler封装的任务
+- work 是指一个时间切片内的工作单元

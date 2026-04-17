@@ -5,7 +5,7 @@
 
 
 import { getCurrentTime, isFn } from "@shared/src/utils";
-import { peek, pop } from "./SchedulerMinHeap";
+import { peek, pop, push } from "./SchedulerMinHeap";
 import {
   NoPriority,
   ImmediatePriority,
@@ -15,6 +15,7 @@ import {
   IdlePriority,
   type PriorityLevel,
 } from "./SchedulerPriorities";
+import { lowPriorityTimeout, maxSigned31BitInt, normalPriorityTimeout, userBlockingPriorityTimeout } from "./SchedulerFeatureFlags";
 
 type Callback = (arg: boolean) => Callback | null | undefined;
 export type Task = {
@@ -28,6 +29,10 @@ export type Task = {
 
 // 任务池 通过最小堆实现
 const taskQueue: Array<Task> = [];
+
+// 任务id计数器,标记task的唯一性
+let taskIdCounter = 1;
+
 let currentTask: Task | null = null;
 let currentPriorityLevel: PriorityLevel = NoPriority;
 // 记录时间切片的起始值，时间戳
@@ -39,10 +44,58 @@ let frameInterval: number = 5;
 // 锁，防止重复调度
 // 是否有work在运行
 let isPerformingWork = false;
+// 主线程是否在调度
+let isHostCallbackScheduled = false;
 
 // 任务调度器的入口函数
-function scheduleCallback(PriorityLevel: PriorityLevel, callback: Callback) {}
+function scheduleCallback(priorityLevel: PriorityLevel, callback: Callback) {
 
+  const startTime = getCurrentTime();
+  let timeout:number;
+  switch(priorityLevel){
+    case ImmediatePriority: // 立即执行
+      timeout = -1;
+      break;
+    case UserBlockingPriority: // 用户阻塞优先级
+      timeout = userBlockingPriorityTimeout;
+      break;
+    case NormalPriority:
+      // 正常优先级的任务，
+      timeout = normalPriorityTimeout;
+      break;
+    case LowPriority:
+      // 低优先级的任务，
+      timeout = lowPriorityTimeout;
+      break;
+    case IdlePriority:
+      // 空闲优先级的任务，过期时间为最大时间戳
+      timeout = maxSigned31BitInt;
+      break;
+    default:
+      timeout = normalPriorityTimeout;
+      break;
+  }
+  const expirationTime = startTime + timeout;
+
+  const newTask: Task = {
+    id: taskIdCounter++,
+    callback: callback,
+    priorityLevel,
+    startTime,
+    expirationTime,
+    sortIndex: -1,
+  };
+ newTask.sortIndex = expirationTime;
+ push(taskQueue, newTask);
+ // 加锁
+ if (!isHostCallbackScheduled && !isPerformingWork) {
+  isPerformingWork = true;
+  requestHostCallbackWork(startTime);
+ }
+}
+function requestHostCallbackWork(initialTime: number) {
+  
+}
 // 取消任务, 由于最小堆没法直接删除，只能初步将task.callback设置为null
 // 后续任务中，当该任务位于堆顶时，会被跳过
 function cancelCallback(callback: Callback) {

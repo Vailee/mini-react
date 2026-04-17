@@ -2,6 +2,7 @@
 module.exports = {
   useEmoji: true,
   emojiAlign: 'center',
+  // skipQuestions: ['body', 'breaking', 'footer', 'footerPrefix'], // 跳过 body、breaking、footer、footerPrefix 问题
   types: [
     { value: 'feat', name: 'feat:     ✨  新增功能', emoji: ':sparkles:' },
     { value: 'fix', name: 'fix:      🐛  修复缺陷', emoji: ':bug:' },
