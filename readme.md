@@ -1,4 +1,14 @@
 # mini-react
+## 规范与工具
+
+### Git 提交规范
+项目使用 [husky](https://github.com/typicode/husky) 和 [commitizen](https://github.com/commitizen/cz-cli) 来规范 Git 提交信息。
+
+#### 提交步骤
+1. **暂存更改**: `git add .`
+2. **启动交互式提交**: `pnpm commit`
+3. **选择提交类型**: 根据提示选择 `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore` 等。
+4. **填写描述**: 按照提示输入简短描述和详细说明。
 
 ## 初始化
 
@@ -32,16 +42,7 @@ pnpm add react --filter shared
 pnpm add scheduler --filter react
 ```
 
-## 规范与工具
 
-### Git 提交规范
-项目使用 [husky](https://github.com/typicode/husky) 和 [commitizen](https://github.com/commitizen/cz-cli) 来规范 Git 提交信息。
-
-#### 提交步骤
-1. **暂存更改**: `git add .`
-2. **启动交互式提交**: `pnpm commit`
-3. **选择提交类型**: 根据提示选择 `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore` 等。
-4. **填写描述**: 按照提示输入简短描述和详细说明。
 
 ### 代码测试
 ```bash
@@ -64,3 +65,12 @@ callback task work 的区别
 - callback是任务的初始值
 - task 是scheduler封装的任务
 - work 是指一个时间切片内的工作单元
+
+## scheduler 入口实现
+- 定义task，包含 callback，priorityLevel，starttime， expiration Time等
+- 通过最小堆 将新任务添加到堆中
+- 加锁， 没有主线程在调度，且没有正在执行的工作单元，才触发host callback work，防止重复添加任务
+- 执行requestHostCallbackWork， 触发host callback
+
+## 实现一个requestIdleCallback 函数
+

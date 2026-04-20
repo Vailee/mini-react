@@ -7,6 +7,8 @@ import {
   LowPriority,
 } from "../src/SchedulerPriorities";
 
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 /**
  * Scheduler 基础功能测试
  * 
@@ -16,7 +18,7 @@ import {
  */
 describe("Scheduler", () => {
   
-  it("相同优先级任务应按插入顺序执行", () => {
+  it("相同优先级任务应按插入顺序执行", async () => {
     const eventTasks: string[] = [];
 
     scheduleCallback(NormalPriority, () => {
@@ -29,12 +31,14 @@ describe("Scheduler", () => {
       return null;
     });
 
+    // 等待异步调度执行
+    await sleep(50);
+
     // 预期执行顺序: ["Task1", "Task2"]
-    // 注意：当前 Scheduler 尚未实现自动执行逻辑，此处断言暂作为逻辑参考
-    // expect(eventTasks).toEqual(["Task1", "Task2"]);
+    expect(eventTasks).toEqual(["Task1", "Task2"]);
   });
 
-  it("3 个不同优先级的任务应按优先级高低执行", () => {
+  it("3 个不同优先级的任务应按优先级高低执行", async () => {
     const eventTasks: string[] = [];
 
     scheduleCallback(LowPriority, () => {
@@ -52,11 +56,14 @@ describe("Scheduler", () => {
       return null;
     });
 
+    // 等待异步调度执行
+    await sleep(50);
+
     // 预期执行顺序: Immediate(1) -> Normal(3) -> Low(4)
-    // expect(eventTasks).toEqual(["ImmediatePriority", "NormalPriority", "LowPriority"]);
+    expect(eventTasks).toEqual(["ImmediatePriority", "NormalPriority", "LowPriority"]);
   });
 
-  it("4 个不同优先级的任务应按优先级高低执行", () => {
+  it("4 个不同优先级的任务应按优先级高低执行", async () => {
     const eventTasks: string[] = [];
 
     scheduleCallback(LowPriority, () => {
@@ -79,12 +86,39 @@ describe("Scheduler", () => {
       return null;
     });
 
+    // 等待异步调度执行
+    await sleep(50);
+
     // 预期执行顺序: Immediate(1) -> UserBlocking(2) -> Normal(3) -> Low(4)
-    // expect(eventTasks).toEqual([
-    //   "ImmediatePriority", 
-    //   "UserBlockingPriority", 
-    //   "NormalPriority", 
-    //   "LowPriority"
-    // ]);
+    expect(eventTasks).toEqual([
+      "ImmediatePriority", 
+      "UserBlockingPriority", 
+      "NormalPriority", 
+      "LowPriority"
+    ]);
+  });
+
+  it("应该支持延迟任务 (delay)", async () => {
+    const eventTasks: string[] = [];
+
+    // 调度一个立即执行的任务
+    scheduleCallback(NormalPriority, () => {
+      eventTasks.push("ImmediateTask");
+      return null;
+    });
+
+    // 调度一个延迟 100ms 的任务
+    scheduleCallback(NormalPriority, () => {
+      eventTasks.push("DelayedTask");
+      return null;
+    }, { delay: 100 });
+
+    // 立即检查，延迟任务不应该执行
+    await sleep(50);
+    expect(eventTasks).toEqual(["ImmediateTask"]);
+
+    // 等待足够长的时间，让延迟任务执行
+    await sleep(100);
+    expect(eventTasks).toEqual(["ImmediateTask", "DelayedTask"]);
   });
 });
